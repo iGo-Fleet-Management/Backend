@@ -3,7 +3,7 @@ const TripService = require('../services/tripService');
 //tranformar essa função para buscar paradas
 exports.getTrip = async (req, res) => {
   try {
-    const trip = await TripService.getTripById(req.params.tripId);
+    const trip = await TripService.getTripByDateAndType(req.params.tripId);
     if (!trip)
       return res
         .status(404)
@@ -47,16 +47,22 @@ exports.getDailyTrips = async (req, res) => {
   }
 };
 
-exports.deleteTrip = async (req, res) => {
+exports.getTripByDateAndType = async (req, res) => {
   try {
-    await TripService.deleteTrip(req.params.tripId);
-    res.status(204).json({
+    console.log(req.body);
+    const date = req.body.date;
+    const tripType = req.body.tripType;
+    console.log(date, tripType);
+
+    const resume = await TripService.getTripByDateAndType(date, tripType);
+    console.log(resume);
+    res.status(200).json({
       status: 'success',
-      data: null,
+      resume,
     });
   } catch (error) {
-    res.status(400).json({
-      status: 'fail',
+    res.status(500).json({
+      status: 'error',
       message: error.message,
     });
   }

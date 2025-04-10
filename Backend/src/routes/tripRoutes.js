@@ -92,39 +92,6 @@ router.get('/daily', validate(dailyTripsSchema), controller.getDailyTrips);
  *       500:
  *         description: Erro ao recuperar dados
  */
-router.get(
-  '/:tripId',
-  validate(tripParamsSchema, 'params'),
-  controller.getTrip
-);
-
-/**
- * @swagger
- * /trips/{tripId}:
- *   delete:
- *     tags:
- *       - Trips
- *     summary: Exclui uma viagem
- *     description: Remove permanentemente uma viagem do sistema pelo ID
- *     parameters:
- *       - in: path
- *         name: tripId
- *         required: true
- *         schema:
- *           type: string
- *         example: "65a8b5d9f1a0f83260f4e7d8"
- *     responses:
- *       204:
- *         description: Viagem excluída com sucesso
- *       404:
- *         description: Viagem não encontrada
- *       500:
- *         description: Erro na exclusão
- */
-router.delete(
-  '/:tripId',
-  validate(tripParamsSchema, 'params'),
-  controller.deleteTrip
-);
+router.get('/get-trip', controller.getTripByDateAndType);
 
 module.exports = router;

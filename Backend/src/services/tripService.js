@@ -45,3 +45,38 @@ exports.getDailyTrips = async (date) => {
     ],
   });
 };
+
+exports.getTripByDateAndType = async (date, tripType) => {
+  const zoneDate = DateTime.fromISO(date, { zone: 'America/Sao_Paulo' });
+
+  console.log(date, tripType);
+  console.log(zoneDate);
+
+  if (!zoneDate.isValid) {
+    throw new Error('Data inválida');
+  }
+
+  const dateOnly = zoneDate.toFormat('yyyy-MM-dd');
+
+  //const resume = await TripRepository.findTripByDateAndType(dateOnly, tripType);
+  const resume = await TripRepository.model.findAll({
+    where: {
+      trip_date: dateOnly,
+      trip_type: tripType,
+    },
+    include: [
+      {
+        model: Stop,
+        as: 'stops',
+        attributes: ['stop_id', 'stop_date'],
+        required: false,
+      },
+    ],
+    order: [
+      ['trip_type', 'ASC'],
+      [sequelize.col('stops.stop_date'), 'ASC'],
+    ],
+  });
+
+  return resume;
+};
