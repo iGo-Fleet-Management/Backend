@@ -1,5 +1,5 @@
 const { DateTime } = require('luxon');
-const { Stop } = require('../models');
+const { Stop, User, Address } = require('../models');
 const { withTransaction } = require('./utilities/transactionHelper');
 const sequelize = require('../config/db');
 const TripRepository = require('../repositories/tripRepository');
@@ -46,19 +46,21 @@ exports.getDailyTrips = async (date) => {
   });
 };
 
-exports.getTripByDateAndType = async (date, tripType) => {
+exports.getTripAddresesByDateAndType = async (date, tripType) => {
   const zoneDate = DateTime.fromISO(date, { zone: 'America/Sao_Paulo' });
-
-  console.log(date, tripType);
-  console.log(zoneDate);
 
   if (!zoneDate.isValid) {
     throw new Error('Data inválida');
   }
 
+  let address = '';
+
+  if (tripType !== 'ida') {
+    address = 'casa';
+  }
+
   const dateOnly = zoneDate.toFormat('yyyy-MM-dd');
 
-  //const resume = await TripRepository.findTripByDateAndType(dateOnly, tripType);
   const resume = await TripRepository.model.findAll({
     where: {
       trip_date: dateOnly,
@@ -68,14 +70,19 @@ exports.getTripByDateAndType = async (date, tripType) => {
       {
         model: Stop,
         as: 'stops',
-        attributes: ['stop_id', 'stop_date'],
+        attributes: ['user_id'],
         required: false,
+        include: [
+          {
+            model: Address,
+            as: 'address',
+            attributes: ['address_type', 'street', 'number', 'neighbourhood'],
+            required: false,
+          },
+        ],
       },
     ],
-    order: [
-      ['trip_type', 'ASC'],
-      [sequelize.col('stops.stop_date'), 'ASC'],
-    ],
+    attributes: ['trip_type', 'trip_date'],
   });
 
   return resume;

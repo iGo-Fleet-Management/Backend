@@ -47,18 +47,36 @@ exports.getDailyTrips = async (req, res) => {
   }
 };
 
-exports.getTripByDateAndType = async (req, res) => {
+exports.getTripAddresesByDateAndType = async (req, res) => {
   try {
-    console.log(req.body);
     const date = req.body.date;
     const tripType = req.body.tripType;
-    console.log(date, tripType);
 
-    const resume = await TripService.getTripByDateAndType(date, tripType);
-    console.log(resume);
+    const resume = await TripService.getTripAddresesByDateAndType(
+      date,
+      tripType
+    );
+    // Processa os dados para incluir total_stops e formatar stops
+    const formattedResume = resume.map((trip) => {
+      const plainTrip = trip.get({ plain: true }); // Converte para objeto simples
+      return {
+        ...plainTrip,
+        total_stops: trip.stops ? trip.stops.length : 0, // Adiciona contagem
+        stops: trip.stops
+          ? trip.stops.map((stop) => ({
+              id: stop.stop_id,
+              date: stop.stop_date,
+              address: stop.address
+                ? `${stop.address.address_type}, ${stop.address.street} - ${stop.address.number}, ${stop.address.neighbourhood}`
+                : null,
+            }))
+          : [],
+      };
+    });
+
     res.status(200).json({
       status: 'success',
-      resume,
+      resume: formattedResume, // Envia os dados formatados
     });
   } catch (error) {
     res.status(500).json({
