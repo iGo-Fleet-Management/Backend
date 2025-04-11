@@ -60,10 +60,11 @@ exports.updateAddresses = async (req, res) => {
 // Controller que mantém a funcionalidade combinada para compatibilidade
 exports.createProfile = async (req, res) => {
   try {
-    const { userData } = req.body;
+    const { userData, addressData } = req.body;
     const result = await profileService.createProfile(
       req.user.user_id,
-      userData
+      userData,
+      addressData
     );
 
     res.status(200).json({

@@ -94,4 +94,6 @@ router.get('/daily', validate(dailyTripsSchema), controller.getDailyTrips);
  */
 router.get('/get-trip-addresses', controller.getTripAddresesByDateAndType);
 
+router.get('/get-trip-resume', controller.getTripResumeByDateAndType);
+
 module.exports = router;

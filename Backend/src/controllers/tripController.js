@@ -85,3 +85,20 @@ exports.getTripAddresesByDateAndType = async (req, res) => {
     });
   }
 };
+
+exports.getTripResumeByDateAndType = async (req, res) => {
+  try {
+    const { date } = req.body;
+    const resume = await TripService.getTripResumeByDateAndType(date);
+
+    res.status(200).json({
+      status: 'success',
+      resume: resume,
+    });
+  } catch (error) {
+    res.status(500).json({
+      status: 'error',
+      message: error.message,
+    });
+  }
+};
