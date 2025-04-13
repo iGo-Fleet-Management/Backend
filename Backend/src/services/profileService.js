@@ -32,13 +32,13 @@ exports.saveProfile = async (userId, userData, options = {}) =>
     return getUserWithAddresses(userId, transaction);
   });
 
-exports.saveAddress = async (userId, addressUpdates, options = {}) =>
+exports.saveAddress = async (userId, addressData, options = {}) =>
   withTransaction(options.transaction, async (transaction) => {
     await checkUserExists(userId, transaction);
 
     const addressesToProcess = options.isInitialCompletion
-      ? [{ ...addressUpdates, user_id: userId }]
-      : addressUpdates.map((addr) => ({
+      ? [{ ...addressData, user_id: userId }]
+      : addressData.map((addr) => ({
           ...addr,
           user_id: addr.address_id ? undefined : userId,
         }));

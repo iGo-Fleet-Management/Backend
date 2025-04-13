@@ -37,10 +37,10 @@ exports.updateProfile = async (req, res) => {
 
 exports.updateAddresses = async (req, res) => {
   try {
-    const { addressUpdates } = req.body;
+    const { addressData } = req.body;
     const result = await profileService.saveAddress(
       req.user.user_id,
-      addressUpdates
+      addressData
     );
 
     res.status(200).json({

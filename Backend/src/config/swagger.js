@@ -13,7 +13,7 @@ const swaggerDefinition = {
   },
   servers: [
     {
-      url: 'http://localhost:5000/api',
+      url: 'https://backend-igo.onrender.com/api',
       description: 'Servidor de Desenvolvimento',
     },
   ],
