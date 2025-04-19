@@ -28,6 +28,7 @@
     "nodemailer": "^6.10.0",
     "pg": "^8.14.0",
     "sequelize": "^6.37.6",
+    "socket.io": "^4.8.1",
     "swagger-jsdoc": "^6.2.8",
     "swagger-ui-express": "^5.0.1",
     "validator": "^13.12.0"
