@@ -80,7 +80,6 @@ const router = express.Router();
  */
 router.post(
   '/reset-password',
-  authMiddleware.authenticate,
   forgotPasswordController.resetPasswordFirstLogin
 );
 
