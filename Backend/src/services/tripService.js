@@ -46,7 +46,7 @@ exports.getDailyTrips = async (date) => {
   });
 };
 
-exports.getTripAddresesByDateAndType = async (date, tripType) => {
+exports.getTripAddressesByDateAndType = async (date, tripType) => {
   const zoneDate = DateTime.fromISO(date, { zone: 'America/Sao_Paulo' });
 
   if (!zoneDate.isValid) {
@@ -76,7 +76,7 @@ exports.getTripAddresesByDateAndType = async (date, tripType) => {
           {
             model: Address,
             as: 'address',
-            attributes: ['address_type', 'street', 'number', 'neighbourhood'],
+            attributes: ['street', 'number', 'neighbourhood', 'city', 'state'],
             required: false,
           },
         ],

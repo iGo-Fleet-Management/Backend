@@ -49,10 +49,10 @@ exports.getDailyTrips = async (req, res) => {
 
 exports.getTripAddresesByDateAndType = async (req, res) => {
   try {
-    const date = req.body.date;
-    const tripType = req.body.tripType;
+    const date = req.query.date;
+    const tripType = req.query.tripType;
 
-    const resume = await TripService.getTripAddresesByDateAndType(
+    const resume = await TripService.getTripAddressesByDateAndType(
       date,
       tripType
     );
@@ -67,7 +67,7 @@ exports.getTripAddresesByDateAndType = async (req, res) => {
               id: stop.stop_id,
               date: stop.stop_date,
               address: stop.address
-                ? `${stop.address.address_type}, ${stop.address.street} - ${stop.address.number}, ${stop.address.neighbourhood}`
+                ? `${stop.address.street} - ${stop.address.number}, ${stop.address.neighbourhood}, ${stop.address.city}, ${stop.address.state}`
                 : null,
             }))
           : [],
