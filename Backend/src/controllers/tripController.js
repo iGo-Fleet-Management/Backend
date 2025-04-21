@@ -119,7 +119,6 @@ exports.getTripResumeByDateAndType = async (req, res) => {
 exports.getTripReleasedUsers = async (req, res) => {
   try {
     const { date } = req.query;
-    console.log('Data: ', date);
     // Validação de parâmetro obrigatório
     if (!date) {
       return res.status(400).json({
@@ -130,7 +129,6 @@ exports.getTripReleasedUsers = async (req, res) => {
 
     // Chama o service
     const users = await TripService.getTripReleasedUsers(date);
-    console.log(users);
 
     // Retorna a lista de usuários
     return res.status(200).json({

@@ -84,9 +84,6 @@ exports.addOnlyGoStop = async (userId, date, goStopData, options = {}) => {
       trip_id: goTrip.trip_id,
     };
 
-    console.log('\n================');
-    console.log('goData: ', goData);
-
     await validateStopRelations(goData, transaction);
 
     const allowedTrips = [goTrip.trip_id];
@@ -114,8 +111,6 @@ exports.addOnlyBackStop = async (userId, date, backStopData, options = {}) => {
       user_id: userId,
       trip_id: backTrip.trip_id,
     };
-    console.log('\n================');
-    console.log('backData: ', backData);
 
     await validateStopRelations(backData, transaction);
 
@@ -163,10 +158,6 @@ exports.removeStop = async (
       ...backStopDate,
       trip_id: backTrip.trip_id,
     };
-
-    console.log('\n================');
-    console.log('goData: ', goData);
-    console.log('backData: ', backData);
 
     // Validar relações
     await Promise.all([

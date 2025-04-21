@@ -38,12 +38,6 @@ exports.deleteOtherStops = async (
 };
 
 exports.removeStops = async (userId, allowedTripIds, date, transaction) => {
-  console.log('\n======================');
-  console.log('Entrou no Manager');
-  console.log('userId: ', userId);
-  console.log('allowedTripIds: ', allowedTripIds);
-  console.log('date: ', date);
-  console.log('======================\n');
   const trips = await TripRepository.findAll({
     where: {
       trip_date: date,

@@ -170,8 +170,6 @@ exports.getTripReleasedUsers = async (date) => {
   }
   const dateOnly = zoneDate.toFormat('yyyy-MM-dd');
 
-  console.log('dateOnly: ', dateOnly);
-
   // 2. Busca os stops liberados nessa data, incluindo o usuário
   const releasedStops = await Stop.findAll({
     where: {
@@ -199,8 +197,6 @@ exports.getTripReleasedUsers = async (date) => {
       (user, idx, self) =>
         self.findIndex((u) => u.user_id === user.user_id) === idx
     );
-
-  console.log('service users: ', users);
 
   return users;
 };
