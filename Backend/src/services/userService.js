@@ -38,7 +38,6 @@ exports.getAllUsers = async () =>
       ],
       attributes: {
         exclude: [
-          'user_id',
           'user_type',
           'cpf',
           'birthdate',
