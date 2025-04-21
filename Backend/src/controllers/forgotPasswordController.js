@@ -3,11 +3,11 @@ const emailService = require('../services/emailService');
 
 exports.resetPasswordFirstLogin = async (req, res) => {
   try {
-    const { currentPassword, newPassword } = req.body;
+    const { newPassword } = req.body;
     const { email } = req.user;
 
     // Validação usando o padrão de resposta estabelecido
-    if (!currentPassword || !newPassword) {
+    if (!newPassword) {
       return res.status(400).json({
         success: false,
         code: 'MISSING_REQUIRED_FIELDS',
@@ -17,7 +17,6 @@ exports.resetPasswordFirstLogin = async (req, res) => {
 
     const result = await forgotPasswordService.resetPasswordFirstLogin(
       email,
-      currentPassword,
       newPassword
     );
 

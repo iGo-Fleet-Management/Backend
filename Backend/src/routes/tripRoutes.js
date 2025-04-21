@@ -92,8 +92,10 @@ router.get('/daily', validate(dailyTripsSchema), controller.getDailyTrips);
  *       500:
  *         description: Erro ao recuperar dados
  */
-router.get('/get-trip-addresses', controller.getTripAddresesByDateAndType);
+router.get('/get-trip-data', controller.getTripData);
 
 router.get('/get-trip-resume', controller.getTripResumeByDateAndType);
+
+router.get('/get-trip-released-users', controller.getTripReleasedUsers);
 
 module.exports = router;

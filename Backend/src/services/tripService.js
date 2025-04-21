@@ -46,7 +46,7 @@ exports.getDailyTrips = async (date) => {
   });
 };
 
-exports.getTripAddressesByDateAndType = async (date, tripType) => {
+exports.getTripData = async (date, tripType) => {
   const zoneDate = DateTime.fromISO(date, { zone: 'America/Sao_Paulo' });
 
   if (!zoneDate.isValid) {
@@ -78,6 +78,14 @@ exports.getTripAddressesByDateAndType = async (date, tripType) => {
             as: 'address',
             attributes: ['street', 'number', 'neighbourhood', 'city', 'state'],
             required: false,
+            include: [
+              {
+                model: User,
+                as: 'user',
+                attributes: ['user_id', 'name', 'last_name'],
+                required: false,
+              },
+            ],
           },
         ],
       },
@@ -102,19 +110,45 @@ exports.getTripResumeByDateAndType = async (date) => {
     WITH user_trip_stats AS (
       SELECT
         s.user_id,
+        u.name         AS first_name,
+        u.last_name    AS last_name,
         t.trip_date,
-        MAX(CASE WHEN t.trip_type = 'ida' THEN 1 ELSE 0 END) AS has_ida,
+        MAX(CASE WHEN t.trip_type = 'ida'   THEN 1 ELSE 0 END) AS has_ida,
         MAX(CASE WHEN t.trip_type = 'volta' THEN 1 ELSE 0 END) AS has_volta
       FROM stop s
-      INNER JOIN trip t ON s.trip_id = t.trip_id
+      INNER JOIN trip  t ON s.trip_id = t.trip_id
+      INNER JOIN users u ON s.user_id = u.user_id
       WHERE t.trip_date = :dateParam::DATE
-      GROUP BY s.user_id, t.trip_date
+      GROUP BY s.user_id, u.name, u.last_name, t.trip_date
     )
     SELECT
       trip_date,
-      COUNT(CASE WHEN has_ida = 1 AND has_volta = 1 THEN 1 END) AS ida_e_volta,
-      COUNT(CASE WHEN has_ida = 1 AND has_volta = 0 THEN 1 END) AS somente_ida,
-      COUNT(CASE WHEN has_ida = 0 AND has_volta = 1 THEN 1 END) AS somente_volta
+
+      COUNT(*) FILTER (WHERE has_ida = 1 AND has_volta = 1) AS ida_e_volta,
+      COUNT(*) FILTER (WHERE has_ida = 1 AND has_volta = 0) AS somente_ida,
+      COUNT(*) FILTER (WHERE has_ida = 0 AND has_volta = 1) AS somente_volta,
+
+      ARRAY_AGG(
+        JSON_BUILD_OBJECT(
+          'user_id', user_id,
+          'full_name', first_name || ' ' || last_name
+        )
+      ) FILTER (WHERE has_ida = 1 AND has_volta = 1) AS users_ida_e_volta,
+
+      ARRAY_AGG(
+        JSON_BUILD_OBJECT(
+          'user_id', user_id,
+          'full_name', first_name || ' ' || last_name
+        )
+      ) FILTER (WHERE has_ida = 1 AND has_volta = 0) AS users_somente_ida,
+
+      ARRAY_AGG(
+        JSON_BUILD_OBJECT(
+          'user_id', user_id,
+          'full_name', first_name || ' ' || last_name
+        )
+      ) FILTER (WHERE has_ida = 0 AND has_volta = 1) AS users_somente_volta
+
     FROM user_trip_stats
     GROUP BY trip_date
     ORDER BY trip_date;
@@ -126,4 +160,47 @@ exports.getTripResumeByDateAndType = async (date) => {
   );
 
   return results;
+};
+
+exports.getTripReleasedUsers = async (date) => {
+  // 1. Parse e validação da data no fuso de São Paulo
+  const zoneDate = DateTime.fromISO(date, { zone: 'America/Sao_Paulo' });
+  if (!zoneDate.isValid) {
+    throw new Error('Data inválida');
+  }
+  const dateOnly = zoneDate.toFormat('yyyy-MM-dd');
+
+  console.log('dateOnly: ', dateOnly);
+
+  // 2. Busca os stops liberados nessa data, incluindo o usuário
+  const releasedStops = await Stop.findAll({
+    where: {
+      stop_date: dateOnly,
+      is_released: true,
+    },
+    include: [
+      {
+        model: User,
+        as: 'user',
+        attributes: ['user_id', 'name', 'email'], // ajuste os campos conforme seu model
+        required: true,
+      },
+    ],
+    order: [
+      ['stop_date', 'ASC'],
+      ['user_id', 'ASC'],
+    ],
+  });
+
+  // 3. Extrai e deduplica a lista de usuários
+  const users = releasedStops
+    .map((stop) => stop.user)
+    .filter(
+      (user, idx, self) =>
+        self.findIndex((u) => u.user_id === user.user_id) === idx
+    );
+
+  console.log('service users: ', users);
+
+  return users;
 };

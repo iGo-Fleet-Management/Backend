@@ -82,11 +82,7 @@ exports.resetPasswordWithToken = async (token, userCode, newPassword) => {
   }
 };
 
-exports.resetPasswordFirstLogin = async (
-  email,
-  currentPassword,
-  newPassword
-) => {
+exports.resetPasswordFirstLogin = async (email, newPassword) => {
   try {
     // Log de busca do usuário
     const user = await UserRepository.findByEmail(email, {
@@ -100,22 +96,9 @@ exports.resetPasswordFirstLogin = async (
       throw error;
     }
 
-    // Log de comparação de senha
-    const isPasswordValid = await bcrypt.compare(
-      currentPassword,
-      user.password_hash
-    );
-
-    if (!isPasswordValid) {
-      console.error('Senha atual inválida');
-      const error = new Error('INVALID_CREDENTIALS');
-      error.code = 'INVALID_CREDENTIALS';
-      throw error;
-    }
-
     // Validação de nova senha
     try {
-      this.validateNewPassword(newPassword, currentPassword);
+      this.validateNewPassword(newPassword);
     } catch (validationError) {
       console.error('Erro na validação da nova senha:', validationError);
       throw validationError;
@@ -144,11 +127,7 @@ exports.resetPasswordFirstLogin = async (
 };
 
 // Helpers
-exports.validateNewPassword = (newPassword, currentPassword) => {
-  if (newPassword === currentPassword) {
-    throw new Error('NEW_PASSWORD_SAME_AS_CURRENT');
-  }
-
+exports.validateNewPassword = (newPassword) => {
   if (
     !validator.isStrongPassword(newPassword, {
       minLength: 8,

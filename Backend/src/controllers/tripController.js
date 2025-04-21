@@ -47,30 +47,43 @@ exports.getDailyTrips = async (req, res) => {
   }
 };
 
-exports.getTripAddresesByDateAndType = async (req, res) => {
+exports.getTripData = async (req, res) => {
   try {
     const date = req.query.date;
     const tripType = req.query.tripType;
 
-    const resume = await TripService.getTripAddressesByDateAndType(
-      date,
-      tripType
-    );
-    // Processa os dados para incluir total_stops e formatar stops
+    const resume = await TripService.getTripData(date, tripType);
+
+    function formatAddress(address) {
+      if (!address) return null;
+
+      const { street, number, neighbourhood, city, state, user } = address;
+
+      return {
+        street,
+        number,
+        neighbourhood,
+        city,
+        state,
+        user_id: user?.user_id || null,
+      };
+    }
+
     const formattedResume = resume.map((trip) => {
-      const plainTrip = trip.get({ plain: true }); // Converte para objeto simples
+      const plainTrip = trip.get({ plain: true });
+
       return {
         ...plainTrip,
-        total_stops: trip.stops ? trip.stops.length : 0, // Adiciona contagem
-        stops: trip.stops
-          ? trip.stops.map((stop) => ({
-              id: stop.stop_id,
-              date: stop.stop_date,
-              address: stop.address
-                ? `${stop.address.street} - ${stop.address.number}, ${stop.address.neighbourhood}, ${stop.address.city}, ${stop.address.state}`
-                : null,
-            }))
-          : [],
+        total_stops: trip.stops?.length || 0,
+        stops:
+          trip.stops?.map((stop) => ({
+            id: stop.stop_id,
+            date: stop.stop_date,
+            user_id: stop.address.user.user_id || null,
+            name: stop.address.user.name,
+            last_name: stop.address.user.last_name,
+            address: formatAddress(stop.address),
+          })) || [],
       };
     });
 
@@ -88,7 +101,7 @@ exports.getTripAddresesByDateAndType = async (req, res) => {
 
 exports.getTripResumeByDateAndType = async (req, res) => {
   try {
-    const { date } = req.body;
+    const { date } = req.query;
     const resume = await TripService.getTripResumeByDateAndType(date);
 
     res.status(200).json({
@@ -97,6 +110,36 @@ exports.getTripResumeByDateAndType = async (req, res) => {
     });
   } catch (error) {
     res.status(500).json({
+      status: 'error',
+      message: error.message,
+    });
+  }
+};
+
+exports.getTripReleasedUsers = async (req, res) => {
+  try {
+    const { date } = req.query;
+    console.log('Data: ', date);
+    // Validação de parâmetro obrigatório
+    if (!date) {
+      return res.status(400).json({
+        status: 'error',
+        message: 'Parâmetro "date" é obrigatório',
+      });
+    }
+
+    // Chama o service
+    const users = await TripService.getTripReleasedUsers(date);
+    console.log(users);
+
+    // Retorna a lista de usuários
+    return res.status(200).json({
+      status: 'success',
+      data: users,
+    });
+  } catch (error) {
+    // Em caso de erro interno
+    return res.status(500).json({
       status: 'error',
       message: error.message,
     });
