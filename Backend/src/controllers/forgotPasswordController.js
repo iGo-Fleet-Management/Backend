@@ -20,10 +20,13 @@ exports.resetPasswordFirstLogin = async (req, res) => {
       newPassword
     );
 
+    console.log('Resultado do resetPasswordFirstLogin:', result);
+    console.log(result.token);
+
     return res.status(200).json({
       success: true,
       data: {
-        token: result.token,
+        token: result,
         message: 'Senha atualizada com sucesso',
       },
     });

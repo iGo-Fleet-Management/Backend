@@ -86,7 +86,7 @@ exports.resetPasswordFirstLogin = async (email, newPassword) => {
   try {
     // Log de busca do usuário
     const user = await UserRepository.findByEmail(email, {
-      attributes: ['user_id', 'password_hash'],
+      attributes: ['user_id', 'user_type', 'reset_password', 'password_hash'],
     });
 
     if (!user) {
@@ -113,8 +113,22 @@ exports.resetPasswordFirstLogin = async (email, newPassword) => {
       reset_password: false,
     });
 
+    const updatedUser = await UserRepository.findByEmail(email, {
+      attributes: ['user_id', 'user_type', 'reset_password', 'password_hash'],
+    });
+
     // Geração de novo token
-    return this.generateNewAuthToken(user);
+    const token = jwt.sign(
+      {
+        user_id: updatedUser.user_id,
+        user_type: updatedUser.user_type,
+        reset_password: updatedUser.reset_password,
+      },
+      JWT_SECRET,
+      { expiresIn: '30d' }
+    );
+
+    return token;
   } catch (error) {
     console.error('Erro detalhado:', {
       name: error.name,
