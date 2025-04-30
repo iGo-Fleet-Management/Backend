@@ -12,7 +12,7 @@ function startBlacklistCleanup() {
   // Executa imediatamente na inicialização
   clean().then(() => {
     // Depois da primeira execução, inicia o intervalo
-    setInterval(clean, 60 * 60 * 1000);
+    setInterval(clean, 10 * 60 * 1000);
   });
 }
 
