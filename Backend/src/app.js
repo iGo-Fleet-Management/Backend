@@ -1,4 +1,5 @@
 const express = require('express');
+const path = require('path');
 const dotenv = require('dotenv');
 const cors = require('cors');
 const helmet = require('helmet');
@@ -10,6 +11,8 @@ const swaggerSpec = require('./config/swagger');
 dotenv.config(); // Carrega variáveis de ambiente do arquivo .env
 
 const app = express();
+
+app.use(express.static(path.join(__dirname, 'public')));
 
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
