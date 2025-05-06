@@ -14,7 +14,7 @@ exports.createDailyTrips = async (tripDate = new Date()) => {
       throw new Error('Não é possível criar viagens para datas passadas');
     }
 
-    const dateOnly = parsedDate.toFormat('yyyy-MM-dd');
+    const dateOnly = parsedDate.toISODate('yyyy-MM-dd');
     return TripRepository.createDailyTrips(dateOnly, { transaction });
   });
 };
@@ -27,7 +27,7 @@ exports.getDailyTrips = async (date) => {
     throw new Error('Data inválida');
   }
 
-  const dateOnly = zoneDate.toFormat('yyyy-MM-dd');
+  const dateOnly = zoneDate.toISODate('yyyy-MM-dd');
 
   return TripRepository.model.findAll({
     where: { trip_date: dateOnly },
@@ -59,7 +59,7 @@ exports.getTripData = async (date, tripType) => {
     address = 'casa';
   }
 
-  const dateOnly = zoneDate.toFormat('yyyy-MM-dd');
+  const dateOnly = zoneDate.toISODate('yyyy-MM-dd');
 
   const resume = await TripRepository.model.findAll({
     where: {
@@ -103,7 +103,7 @@ exports.getTripResumeByDateAndType = async (date) => {
     throw new Error('Data inválida');
   }
 
-  const dateOnly = zoneDate.toFormat('yyyy-MM-dd');
+  const dateOnly = zoneDate.toISODate('yyyy-MM-dd');
 
   const results = await sequelize.query(
     `
@@ -168,7 +168,7 @@ exports.getTripReleasedUsers = async (date) => {
   if (!zoneDate.isValid) {
     throw new Error('Data inválida');
   }
-  const dateOnly = zoneDate.toFormat('yyyy-MM-dd');
+  const dateOnly = zoneDate.toISODate('yyyy-MM-dd');
 
   // 2. Busca os stops liberados nessa data, incluindo o usuário
   const releasedStops = await Stop.findAll({
