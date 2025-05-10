@@ -8,7 +8,7 @@ const setupSockets = require('./config/socket');
 
 const server = http.createServer(app);
 
-setupSockets(server);
+setupSockets(server, app);
 
 startBlacklistCleanup();
 startTripScheduler();

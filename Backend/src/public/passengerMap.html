@@ -46,32 +46,32 @@
 
       window.onload = initMap;
 
+      let firstPassenger = true;
+      let firstDriver = true;
       document.addEventListener("message", function (event) {
         try {
           const data = JSON.parse(event.data);
 
-          if (data.type === "updateDriver") {
+          if (data.type === "updatePassenger" && firstPassenger) {
+             const { lat, lng } = data.location;
+             const newPos = { lat, lng };
+             
+             // Atualiza marcador do passageiro
+             passengerMarker.setPosition(newPos);
+ 
+             map.panTo(newPos);
+             firstPassenger = false;
+          }
+
+          if (data.type === "updateDriver" && firstDriver) {
             const { lat, lng } = data.location;
             const newPos = { lat, lng };
             driverMarker.setPosition(newPos);
 
-            if (isFirstUpdate) {
-              map.panTo(newPos); // Centraliza no novo ponto
-              isFirstUpdate = false; // Desativa a centralização após a primeira atualização
-            }
-          } else if (data.type === "updatePassenger") {
-            const { lat, lng } = data.location;
-            const newPos = { lat, lng };
-            
-            // Atualiza marcador do passageiro
-            passengerMarker.setPosition(newPos);
-            
-            // Centraliza mapa na primeira atualização
-            if (isFirstUpdate) {
-              map.panTo(newPos);
-              isFirstUpdate = false;
-            }
+            map.panTo(newPos);
+            firstDriver = false;
           }
+
         } catch (e) {
           console.error("Erro ao processar localização", e);
         }

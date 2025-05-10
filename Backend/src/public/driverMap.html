@@ -1,199 +1,224 @@
-<!DOCTYPE html>
+<!doctype html>
 <html>
-    <head>
+  <head>
     <meta name="viewport" content="initial-scale=1.0, user-scalable=no" />
     <meta charset="utf-8" />
     <style>
-        html, body, 
-        #map {
+      html,
+      body,
+      #map {
         position: absolute !important;
         top: 0;
         bottom: 0;
         left: 0;
         right: 0;
         background-color: #e0e0e0; /* Cor de fundo para debug */
-    }
+      }
     </style>
     <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCvcxlQaCUGRYvSQWUqoiaEKEYN3dY8Vz0&libraries=places,geometry"></script>
     <script>
-    let map, marker, directionsRenderer;
-    let directionsService = new google.maps.DirectionsService();
-    let waypointMarkers = []; // Array para armazenar os marcadores de waypoints
+      let map, marker, directionsRenderer;
+      let directionsService = new google.maps.DirectionsService();
+      let waypointMarkers = []; // Array para armazenar os marcadores de waypoints
 
-    function initMap() {
+      function initMap() {
         map = new google.maps.Map(document.getElementById('map'), {
-            zoom: 15,
-            center: { lat: -19.51426194402678, lng: -42.61166145386494 },
-            disableDefaultUI: true,
-            gestureHandling: 'greedy',
-            mapTypeId: google.maps.MapTypeId.ROADMAP
+          zoom: 15,
+          center: { lat: -19.51426194402678, lng: -42.61166145386494 },
+          disableDefaultUI: true,
+          gestureHandling: 'greedy',
+          mapTypeId: google.maps.MapTypeId.ROADMAP,
         });
 
         directionsRenderer = new google.maps.DirectionsRenderer({
-            suppressMarkers: true,
-            polylineOptions: {
-                strokeColor: '#2677FF',
-                strokeOpacity: 0.8,
-                strokeWeight: 6
-            }
+          suppressMarkers: true,
+          polylineOptions: {
+            strokeColor: '#2677FF',
+            strokeOpacity: 0.8,
+            strokeWeight: 6,
+          },
         });
         directionsRenderer.setMap(map);
-        
-    }
+      }
 
-    // Atualizar função para atualizar o marcador
-    function updateDriverMarker(lat, lng) {
+      // Atualizar função para atualizar o marcador
+      function updateDriverMarker(lat, lng) {
         const position = new google.maps.LatLng(lat, lng);
-        
-        if (!marker) {
-            marker = new google.maps.Marker({
-                position: position,
-                map: map,
-                title: "Motorista",
-                icon: {
-                    path: google.maps.SymbolPath.CIRCLE,
-                    scale: 7,
-                    fillColor: '#34eb52',
-                    fillOpacity: 1,
-                    strokeColor: '#000',
-                    strokeWeight: 1.5
-                }
-            });
-        } else {
-            marker.setPosition(position);
-        }
-        
-        map.panTo(position);
-    }
 
-    // Funções necessárias para o cálculo e exibição da rota
-    function calculateAndDisplayRoute(routeData) {
-        
-        if (!map) {
-            console.error("Mapa não inicializado ainda!");
-            if (window.ReactNativeWebView) {
-                window.ReactNativeWebView.postMessage("Erro: Mapa não inicializado");
-            }
-            return;
+        if (!marker) {
+          marker = new google.maps.Marker({
+            position: position,
+            map: map,
+            title: 'Motorista',
+            icon: {
+              path: google.maps.SymbolPath.CIRCLE,
+              scale: 7,
+              fillColor: '#34eb52',
+              fillOpacity: 1,
+              strokeColor: '#000',
+              strokeWeight: 1.5,
+            },
+          });
+        } else {
+          marker.setPosition(position);
         }
-        
+
+        map.panTo(position);
+      }
+
+      // Funções necessárias para o cálculo e exibição da rota
+      function calculateAndDisplayRoute(routeData) {
+        if (!map) {
+          console.error('Mapa não inicializado ainda!');
+          if (window.ReactNativeWebView) {
+            window.ReactNativeWebView.postMessage(
+              'Erro: Mapa não inicializado'
+            );
+          }
+          return;
+        }
+
         // Limpar rota anterior (se existir)
         if (directionsRenderer) {
-            directionsRenderer.setMap(null);
+          directionsRenderer.setMap(null);
         }
-        
+
         // Recriar o renderer
         directionsRenderer = new google.maps.DirectionsRenderer({
-            suppressMarkers: true,
-            polylineOptions: {
-                strokeColor: '#2677ff',
-                strokeOpacity: 0.9,
-                strokeWeight: 8
-            }
+          suppressMarkers: true,
+          polylineOptions: {
+            strokeColor: '#2677ff',
+            strokeOpacity: 0.9,
+            strokeWeight: 8,
+          },
         });
-        
+
         // Definir o mapa para o renderer
         directionsRenderer.setMap(map);
-        
-        try {
-            const request = {
-                origin: new google.maps.LatLng(routeData.origin.lat, routeData.origin.lng),
-                destination: new google.maps.LatLng(routeData.destination.lat, routeData.destination.lng),
-                waypoints: routeData.waypoints?.map(wp => ({
-                    location: new google.maps.LatLng(wp.location.lat, wp.location.lng),
-                    stopover: true
-                })) || [],
-                travelMode: google.maps.TravelMode.DRIVING,
-                optimizeWaypoints: true
-            };
-            
-            directionsService.route(request, (response, status) => {
-                const message = `Route status: ${status}`;
-                
-                if (window.ReactNativeWebView) {
-                    window.ReactNativeWebView.postMessage(message);
-                }
-                
-                if (status === 'OK') {
-                    directionsRenderer.setDirections(response);
-                    
-                    // Adicionar marcadores nos waypoints
-                    addWaypointMarkers(routeData);
-                    
-                    // Ajustar o zoom para mostrar toda a rota
-                    const bounds = new google.maps.LatLngBounds();
-                    const route = response.routes[0];
-                    for (let i = 0; i < route.legs.length; i++) {
-                        bounds.extend(route.legs[i].start_location);
-                        bounds.extend(route.legs[i].end_location);
-                    }
-                    map.fitBounds(bounds);
-                    
-                    if (window.ReactNativeWebView) {
-                        window.ReactNativeWebView.postMessage("Rota exibida com sucesso");
-                    }
-                } else {
-                    const errorMsg = `Erro na rota: ${status}`;
-                    console.error(errorMsg);
-                    if (window.ReactNativeWebView) {
-                        window.ReactNativeWebView.postMessage(errorMsg);
-                    }
-                }
-            });
-        } catch (error) {
-            const errorMsg = `Erro crítico: ${error.message}`;
-            console.error(errorMsg);
-            if (window.ReactNativeWebView) {
-                window.ReactNativeWebView.postMessage(errorMsg);
-            }
-        }
-    }
 
-    function addWaypointMarkers(routeData) {
+        try {
+          const request = {
+            origin: new google.maps.LatLng(
+              routeData.origin.lat,
+              routeData.origin.lng
+            ),
+            destination: new google.maps.LatLng(
+              routeData.destination.lat,
+              routeData.destination.lng
+            ),
+            waypoints:
+              routeData.waypoints?.map((wp) => ({
+                location: new google.maps.LatLng(
+                  wp.location.lat,
+                  wp.location.lng
+                ),
+                stopover: true,
+              })) || [],
+            travelMode: google.maps.TravelMode.DRIVING,
+            optimizeWaypoints: true,
+          };
+
+          directionsService.route(request, (response, status) => {
+            const message = `Route status: ${status}`;
+
+            if (window.ReactNativeWebView) {
+              window.ReactNativeWebView.postMessage(message);
+            }
+
+            if (status === 'OK') {
+              directionsRenderer.setDirections(response);
+
+              // Adicionar marcadores nos waypoints
+              addWaypointMarkers(routeData);
+
+              // Ajustar o zoom para mostrar toda a rota
+              const bounds = new google.maps.LatLngBounds();
+              const route = response.routes[0];
+              for (let i = 0; i < route.legs.length; i++) {
+                bounds.extend(route.legs[i].start_location);
+                bounds.extend(route.legs[i].end_location);
+              }
+              map.fitBounds(bounds);
+
+              if (window.ReactNativeWebView) {
+                window.ReactNativeWebView.postMessage(
+                  'Rota exibida com sucesso'
+                );
+              }
+            } else {
+              const errorMsg = `Erro na rota: ${status}`;
+              console.error(errorMsg);
+              if (window.ReactNativeWebView) {
+                window.ReactNativeWebView.postMessage(errorMsg);
+              }
+            }
+          });
+        } catch (error) {
+          const errorMsg = `Erro crítico: ${error.message}`;
+          console.error(errorMsg);
+          if (window.ReactNativeWebView) {
+            window.ReactNativeWebView.postMessage(errorMsg);
+          }
+        }
+      }
+
+      function addWaypointMarkers(routeData) {
         // Limpar marcadores anteriores
         clearWaypointMarkers();
-        
+
         // Adicionar marcador na origem
-        createMarker(routeData.origin, "Origem", "https://maps.google.com/mapfiles/ms/icons/green-dot.png");
-        
+        createMarker(
+          routeData.origin,
+          'Origem',
+          'https://maps.google.com/mapfiles/ms/icons/green-dot.png'
+        );
+
         // Adicionar marcador no destino
-        createMarker(routeData.destination, "Destino", "https://maps.google.com/mapfiles/ms/icons/red-dot.png");
-        
+        createMarker(
+          routeData.destination,
+          'Destino',
+          'https://maps.google.com/mapfiles/ms/icons/red-dot.png'
+        );
+
         // Adicionar marcadores nos waypoints
         if (routeData.waypoints && routeData.waypoints.length > 0) {
-            routeData.waypoints.forEach((waypoint, index) => {
-                createMarker(waypoint.location, `Parada ${index + 1}`, "https://maps.google.com/mapfiles/ms/icons/blue-dot.png");
-            });
+          routeData.waypoints.forEach((waypoint, index) => {
+            createMarker(
+              waypoint.location,
+              `Parada ${index + 1}`,
+              'https://maps.google.com/mapfiles/ms/icons/blue-dot.png'
+            );
+          });
         }
-    }
+      }
 
-    function createMarker(position, title, iconUrl) {
+      function createMarker(position, title, iconUrl) {
         const marker = new google.maps.Marker({
-            position: new google.maps.LatLng(position.lat, position.lng),
-            map: map,
-            title: title,
-            icon: {
-                url: iconUrl,
-                scaledSize: new google.maps.Size(30, 30)
-            }
+          position: new google.maps.LatLng(position.lat, position.lng),
+          map: map,
+          title: title,
+          icon: {
+            url: iconUrl,
+            scaledSize: new google.maps.Size(30, 30),
+          },
         });
-        
+
         waypointMarkers.push(marker);
         return marker;
-    }
+      }
 
-    function clearWaypointMarkers() {
+      function clearWaypointMarkers() {
         // Remover todos os marcadores anteriores
-        waypointMarkers.forEach(marker => marker.setMap(null));
+        waypointMarkers.forEach((marker) => marker.setMap(null));
         waypointMarkers = [];
-    }
+      }
 
-    // Expõe as funções para o React Native
-    window.updateDriverMarker = updateDriverMarker;
-    window.calculateAndDisplayRoute = calculateAndDisplayRoute;
+      // Expõe as funções para o React Native
+      window.updateDriverMarker = updateDriverMarker;
+      window.calculateAndDisplayRoute = calculateAndDisplayRoute;
     </script>
-    </head>
-    <body onload="initMap()">
+  </head>
+  <body onload="initMap()">
     <div id="map"></div>
-    </body>
+  </body>
 </html>
