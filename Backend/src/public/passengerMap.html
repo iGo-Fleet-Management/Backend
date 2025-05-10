@@ -12,7 +12,8 @@
       let map;
       let driverMarker;
       let passengerMarker;
-      let isFirstUpdate = true; // Flag para verificar a primeira atualização
+      let isFirstUpdate = true; // Flag para controlar o primeiro posicionamento do mapa
+      let bounds;
 
       function initMap() {
         const defaultPos = { lat: -19.469, lng: -42.5367 };
@@ -22,10 +23,13 @@
           disableDefaultUI: true,
         });
 
+        bounds = new google.maps.LatLngBounds();
+
         driverMarker = new google.maps.Marker({
           position: defaultPos,
           map: map,
           title: "Motorista",
+          visible: false // Inicialmente invisível até receber dados
         });
 
         // Marcador do passageiro (inicialmente invisível)
@@ -33,6 +37,7 @@
           position: null,
           map: map,
           title: "Você",
+          visible: false, // Inicialmente invisível até receber dados
           icon: {
             path: google.maps.SymbolPath.CIRCLE,
             fillColor: "#4285F4",
@@ -46,30 +51,44 @@
 
       window.onload = initMap;
 
-      let firstPassenger = true;
-      let firstDriver = true;
       document.addEventListener("message", function (event) {
         try {
           const data = JSON.parse(event.data);
 
-          if (data.type === "updatePassenger" && firstPassenger) {
-             const { lat, lng } = data.location;
-             const newPos = { lat, lng };
-             
-             // Atualiza marcador do passageiro
-             passengerMarker.setPosition(newPos);
- 
-             map.panTo(newPos);
-             firstPassenger = false;
-          }
-
-          if (data.type === "updateDriver" && firstDriver) {
+          if (data.type === "updatePassenger") {
             const { lat, lng } = data.location;
             const newPos = { lat, lng };
-            driverMarker.setPosition(newPos);
+            
+            // Atualiza marcador do passageiro
+            passengerMarker.setPosition(newPos);
+            passengerMarker.setVisible(true);
+            
+            // Se for a primeira atualização e ainda não temos posição do motorista,
+            // centralizamos no passageiro
+            if (isFirstUpdate && !driverMarker.getVisible()) {
+              map.panTo(newPos);
+              isFirstUpdate = false;
+            } else {
+              adjustMapView();
+            }
+          }
 
-            map.panTo(newPos);
-            firstDriver = false;
+          if (data.type === "updateDriver") {
+            const { lat, lng } = data.location;
+            const newPos = { lat, lng };
+            
+            // Atualiza marcador do motorista
+            driverMarker.setPosition(newPos);
+            driverMarker.setVisible(true);
+            
+            // Se for a primeira atualização e ainda não temos posição do passageiro,
+            // centralizamos no motorista
+            if (isFirstUpdate && !passengerMarker.getVisible()) {
+              map.panTo(newPos);
+              isFirstUpdate = false;
+            } else {
+              adjustMapView();
+            }
           }
 
         } catch (e) {
